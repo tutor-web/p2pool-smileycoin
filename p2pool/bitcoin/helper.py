@@ -55,6 +55,26 @@ def getwork(bitcoind, use_getblocktemplate=False):
         work['height'] = (yield bitcoind.rpc_getblock(work['previousblockhash']))['height'] + 1
     elif p2pool.DEBUG:
         assert work['height'] == (yield bitcoind.rpc_getblock(work['previousblockhash']))['height'] + 1
+    
+    # Smileycoin Payments
+    packed_payments = []
+    payment_amount = 0
+    if 'payee' in work['richaddress']:
+        g={}
+        g['payee']=str(work['richaddress']['payee'])
+        g['amount']=work['richaddress']['amount']
+        if g['amount'] > 0:
+            payment_amount += g['amount']
+            packed_payments.append(g)
+    if 'payee' in work['EIASaddress']:
+            g={}
+            g['payee']=str(obj['payee'])
+            g['amount']=obj['amount']
+            if g['amount'] > 0:
+                payment_amount += g['amount']
+                packed_payments.append(g)
+
+
     defer.returnValue(dict(
         version=work['version'],
         previous_block=int(work['previousblockhash'], 16),
@@ -69,6 +89,8 @@ def getwork(bitcoind, use_getblocktemplate=False):
         last_update=time.time(),
         use_getblocktemplate=use_getblocktemplate,
         latency=end - start,
+        payment_amount = payment_amount,
+        packed_payments = packed_payments,
     ))
 
 @deferral.retry('Error submitting primary block: (will retry)', 10, 10)
