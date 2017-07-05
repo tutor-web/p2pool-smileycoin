@@ -305,7 +305,11 @@ class Node(object):
                         break
     
     def get_current_txouts(self):
-        return p2pool_data.get_expected_payouts(self.tracker, self.best_share_var.value, self.bitcoind_work.value['bits'].target, self.bitcoind_work.value['subsidy'], self.net)
+        real_subsidy = self.bitcoind_work.value['subsidy']
+
+        if self.bitcoind_work.value['payment_amount'] >= 0 :
+            real_pay = real_subsidy - self.bitcoind_work.value['payment_amount']
+            return p2pool_data.get_expected_payouts(self.tracker, self.best_share_var.value, self.bitcoind_work.value['bits'].target, real_pay, self.net)
     
     def clean_tracker(self):
         best, desired, decorated_heads, bad_peer_addresses = self.tracker.think(self.get_height_rel_highest, self.bitcoind_work.value['previous_block'], self.bitcoind_work.value['bits'], self.known_txs_var.value)
