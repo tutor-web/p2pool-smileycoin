@@ -68,8 +68,8 @@ def getwork(bitcoind, use_getblocktemplate=True):
             packed_payments.append(g)
     if 'payee' in work['EIASaddress']:
             g={}
-            g['payee']=str(obj['payee'])
-            g['amount']=obj['amount']
+            g['payee']=str(work['EIASaddress']['payee'])
+            g['amount']=work['EIASaddress']['amount']
             if g['amount'] > 0:
                 payment_amount += g['amount']
                 packed_payments.append(g)
