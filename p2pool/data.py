@@ -83,6 +83,11 @@ class NewShare(object):
             ('donation', pack.IntType(16)),
             ('stale_info', pack.EnumType(pack.IntType(8), dict((k, {0: None, 253: 'orphan', 254: 'doa'}.get(k, 'unk%i' % (k,))) for k in xrange(256)))),
             ('desired_version', pack.VarIntType()),
+            ('payment_amount', pack.IntType(64)),
+            ('packed_payments', pack.ListType(pack.ComposedType([
+                ('payee', pack.PossiblyNoneType('',pack.VarStrType())),
+                ('amount', pack.PossiblyNoneType(0,pack.IntType(64))),
+                ]))),
         ])),
         ('new_transaction_hashes', pack.ListType(pack.IntType(256))),
         ('transaction_hash_refs', pack.ListType(pack.VarIntType(), 2)), # pairs of share_count, tx_count
@@ -172,15 +177,30 @@ class NewShare(object):
         )
         assert total_weight == sum(weights.itervalues()) + donation_weight, (total_weight, sum(weights.itervalues()) + donation_weight)
         
-        amounts = dict((script, share_data['subsidy']*(199*weight)//(200*total_weight)) for script, weight in weights.iteritems()) # 99.5% goes according to weights prior to this share
-        this_script = bitcoin_data.pubkey_hash_to_script2(share_data['pubkey_hash'])
-        amounts[this_script] = amounts.get(this_script, 0) + share_data['subsidy']//200 # 0.5% goes to block finder
-        amounts[DONATION_SCRIPT] = amounts.get(DONATION_SCRIPT, 0) + share_data['subsidy'] - sum(amounts.itervalues()) # all that's left over is the donation weight and some extra satoshis due to rounding
+        worker_payout = share_data['subsidy']
         
-        if sum(amounts.itervalues()) != share_data['subsidy'] or any(x < 0 for x in amounts.itervalues()):
+        payments = share_data['packed_payments']
+        payments_tx = []
+        if payments is not None:
+            for obj in payments:
+                pm_script = dash_data.address_to_script2(obj['payee'],net.PARENT)
+                pm_payout = obj['amount']
+                if pm_payout > 0:
+                    payments_tx += [dict(value=pm_payout, script=pm_script)]
+                    worker_payout -= pm_payout
+
+        amounts = dict((script, worker_payout*(49*weight)//(50*total_weight)) for script, weight in weights.iteritems()) # 98% goes according to weights prior to this share
+        this_script = dash_data.pubkey_hash_to_script2(share_data['pubkey_hash'])
+        amounts[this_script] = amounts.get(this_script, 0) + worker_payout//50 # 2% goes to block finder
+        amounts[DONATION_SCRIPT] = amounts.get(DONATION_SCRIPT, 0) + worker_payout - sum(amounts.itervalues()) # all that's left over is the donation weight and some extra satoshis due to rounding
+        
+        if sum(amounts.itervalues()) != worker_payout or any(x < 0 for x in amounts.itervalues()):
             raise ValueError()
         
-        dests = sorted(amounts.iterkeys(), key=lambda script: (script == DONATION_SCRIPT, amounts[script], script))[-4000:] # block length limit, unlikely to ever be hit
+        worker_scripts = sorted([k for k in amounts.iterkeys() if k != DONATION_SCRIPT])
+        worker_tx=[dict(value=amounts[script], script=script) for script in worker_scripts if amounts[script]]
+        
+        donation_tx = [dict(value=amounts[DONATION_SCRIPT], script=DONATION_SCRIPT)]
         
         share_info = dict(
             share_data=share_data,
@@ -204,7 +224,7 @@ class NewShare(object):
                 sequence=None,
                 script=share_data['coinbase'],
             )],
-            tx_outs=[dict(value=amounts[script], script=script) for script in dests if amounts[script] or script == DONATION_SCRIPT] + [dict(
+            tx_outs=worker_tx + payments_tx + donation_tx + [dict(
                 value=0,
                 script='\x6a\x28' + cls.get_ref_hash(net, share_info, ref_merkle_link) + pack.IntType(64).pack(last_txout_nonce),
             )],
@@ -403,6 +423,11 @@ class Share(object):
             ('donation', pack.IntType(16)),
             ('stale_info', pack.EnumType(pack.IntType(8), dict((k, {0: None, 253: 'orphan', 254: 'doa'}.get(k, 'unk%i' % (k,))) for k in xrange(256)))),
             ('desired_version', pack.VarIntType()),
+            ('payment_amount', pack.IntType(64)),
+            ('packed_payments', pack.ListType(pack.ComposedType([
+                ('payee', pack.PossiblyNoneType('',pack.VarStrType())),
+                ('amount', pack.PossiblyNoneType(0,pack.IntType(64))),
+                ]))),
         ])),
         ('new_transaction_hashes', pack.ListType(pack.IntType(256))),
         ('transaction_hash_refs', pack.ListType(pack.VarIntType(), 2)), # pairs of share_count, tx_count
@@ -492,15 +517,30 @@ class Share(object):
         )
         assert total_weight == sum(weights.itervalues()) + donation_weight, (total_weight, sum(weights.itervalues()) + donation_weight)
         
-        amounts = dict((script, share_data['subsidy']*(199*weight)//(200*total_weight)) for script, weight in weights.iteritems()) # 99.5% goes according to weights prior to this share
-        this_script = bitcoin_data.pubkey_hash_to_script2(share_data['pubkey_hash'])
-        amounts[this_script] = amounts.get(this_script, 0) + share_data['subsidy']//200 # 0.5% goes to block finder
-        amounts[DONATION_SCRIPT] = amounts.get(DONATION_SCRIPT, 0) + share_data['subsidy'] - sum(amounts.itervalues()) # all that's left over is the donation weight and some extra satoshis due to rounding
+        worker_payout = share_data['subsidy']
         
-        if sum(amounts.itervalues()) != share_data['subsidy'] or any(x < 0 for x in amounts.itervalues()):
+        payments = share_data['packed_payments']
+        payments_tx = []
+        if payments is not None:
+            for obj in payments:
+                pm_script = dash_data.address_to_script2(obj['payee'],net.PARENT)
+                pm_payout = obj['amount']
+                if pm_payout > 0:
+                    payments_tx += [dict(value=pm_payout, script=pm_script)]
+                    worker_payout -= pm_payout
+
+        amounts = dict((script, worker_payout*(49*weight)//(50*total_weight)) for script, weight in weights.iteritems()) # 98% goes according to weights prior to this share
+        this_script = dash_data.pubkey_hash_to_script2(share_data['pubkey_hash'])
+        amounts[this_script] = amounts.get(this_script, 0) + worker_payout//50 # 2% goes to block finder
+        amounts[DONATION_SCRIPT] = amounts.get(DONATION_SCRIPT, 0) + worker_payout - sum(amounts.itervalues()) # all that's left over is the donation weight and some extra satoshis due to rounding
+        
+        if sum(amounts.itervalues()) != worker_payout or any(x < 0 for x in amounts.itervalues()):
             raise ValueError()
         
-        dests = sorted(amounts.iterkeys(), key=lambda script: (script == DONATION_SCRIPT, amounts[script], script))[-4000:] # block length limit, unlikely to ever be hit
+        worker_scripts = sorted([k for k in amounts.iterkeys() if k != DONATION_SCRIPT])
+        worker_tx=[dict(value=amounts[script], script=script) for script in worker_scripts if amounts[script]]
+        
+        donation_tx = [dict(value=amounts[DONATION_SCRIPT], script=DONATION_SCRIPT)]
         
         share_info = dict(
             share_data=share_data,
