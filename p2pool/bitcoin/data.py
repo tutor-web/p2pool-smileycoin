@@ -271,6 +271,15 @@ def pubkey_to_script2(pubkey):
 def pubkey_hash_to_script2(pubkey_hash):
     return '\x76\xa9' + ('\x14' + pack.IntType(160).pack(pubkey_hash)) + '\x88\xac'
 
+# Create Script from Human Address
+def address_to_script2(address, net):
+    x = human_address_type.unpack(base58_decode(address))
+    if x['version'] == net.ADDRESS_VERSION:
+        return pubkey_hash_to_script2(x['pubkey_hash'])
+    if x['version'] == net.SCRIPT_ADDRESS_VERSION:
+        return pubkey_hash_script_to_script2(x['pubkey_hash'])
+    raise ValueError('address not for this net!')
+
 def script2_to_address(script2, net):
     try:
         pubkey = script2[1:-1]

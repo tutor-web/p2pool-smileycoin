@@ -183,14 +183,14 @@ class NewShare(object):
         payments_tx = []
         if payments is not None:
             for obj in payments:
-                pm_script = dash_data.address_to_script2(obj['payee'],net.PARENT)
+                pm_script = bitcoin_data.address_to_script2(obj['payee'],net.PARENT)
                 pm_payout = obj['amount']
                 if pm_payout > 0:
                     payments_tx += [dict(value=pm_payout, script=pm_script)]
                     worker_payout -= pm_payout
 
         amounts = dict((script, worker_payout*(49*weight)//(50*total_weight)) for script, weight in weights.iteritems()) # 98% goes according to weights prior to this share
-        this_script = dash_data.pubkey_hash_to_script2(share_data['pubkey_hash'])
+        this_script = bitcoin_data.pubkey_hash_to_script2(share_data['pubkey_hash'])
         amounts[this_script] = amounts.get(this_script, 0) + worker_payout//50 # 2% goes to block finder
         amounts[DONATION_SCRIPT] = amounts.get(DONATION_SCRIPT, 0) + worker_payout - sum(amounts.itervalues()) # all that's left over is the donation weight and some extra satoshis due to rounding
         
@@ -523,14 +523,14 @@ class Share(object):
         payments_tx = []
         if payments is not None:
             for obj in payments:
-                pm_script = dash_data.address_to_script2(obj['payee'],net.PARENT)
+                pm_script = bitcoin_data.address_to_script2(obj['payee'],net.PARENT)
                 pm_payout = obj['amount']
                 if pm_payout > 0:
                     payments_tx += [dict(value=pm_payout, script=pm_script)]
                     worker_payout -= pm_payout
 
         amounts = dict((script, worker_payout*(49*weight)//(50*total_weight)) for script, weight in weights.iteritems()) # 98% goes according to weights prior to this share
-        this_script = dash_data.pubkey_hash_to_script2(share_data['pubkey_hash'])
+        this_script = bitcoin_data.pubkey_hash_to_script2(share_data['pubkey_hash'])
         amounts[this_script] = amounts.get(this_script, 0) + worker_payout//50 # 2% goes to block finder
         amounts[DONATION_SCRIPT] = amounts.get(DONATION_SCRIPT, 0) + worker_payout - sum(amounts.itervalues()) # all that's left over is the donation weight and some extra satoshis due to rounding
         
@@ -564,7 +564,7 @@ class Share(object):
                 sequence=None,
                 script=share_data['coinbase'],
             )],
-            tx_outs=[dict(value=amounts[script], script=script) for script in dests if amounts[script] or script == DONATION_SCRIPT] + [dict(
+            tx_outs=worker_tx + payments_tx + donation_tx + [dict(
                 value=0,
                 script='\x6a\x28' + cls.get_ref_hash(net, share_info, ref_merkle_link) + pack.IntType(64).pack(last_txout_nonce),
             )],

@@ -14,7 +14,7 @@ RPC_PORT = 14242
 RPC_CHECK = defer.inlineCallbacks(lambda bitcoind: defer.returnValue(
 'smileycoinaddress' in (yield bitcoind.rpc_help())
 ))
-SUBSIDY_FUNC=lambda height: 10000*10000000 >> (height + 1)//1226400
+SUBSIDY_FUNC=lambda height: 10000*100000000 >> (height + 1)//1226400
 POW_FUNC = lambda data: pack.IntType(256).unpack(__import__('ltc_scrypt').getPoWHash(data))
 BLOCK_PERIOD = 180
 SYMBOL = 'SMLY'
