@@ -111,7 +111,8 @@ class WorkerBridge(worker_interface.WorkerBridge):
                     transactions=[],
                     transaction_fees=[],
                     merkle_link=bitcoin_data.calculate_merkle_link([None], 0),
-                    subsidy=self.node.net.PARENT.SUBSIDY_FUNC(self.node.bitcoind_work.value['height']),
+                    subsidy=self.bitcoind_work.value['subsidy'],
+                    #subsidy=self.node.net.PARENT.SUBSIDY_FUNC(self.node.bitcoind_work.value['height']),
                     last_update=self.node.bitcoind_work.value['last_update'],
                     payment_amount=self.node.bitcoind_work.value['payment_amount'],
                     packed_payments=self.node.bitcoind_work.value['packed_payments'],
@@ -321,8 +322,8 @@ class WorkerBridge(worker_interface.WorkerBridge):
                         None
                     )(*self.get_stale_counts()),
                     desired_version=(share_type.SUCCESSOR if share_type.SUCCESSOR is not None else share_type).VOTING_VERSION,
-                    payment_amount=self.node.bitcoind_work.value['payment_amount'],
-                    packed_payments=self.node.bitcoind_work.value['packed_payments'],
+                    payment_amount=self.current_work.value['payment_amount'],
+                    packed_payments=self.current_work.value['packed_payments'],
                 ),
                 block_target=self.current_work.value['bits'].target,
                 desired_timestamp=int(time.time() + 0.5),
@@ -331,7 +332,8 @@ class WorkerBridge(worker_interface.WorkerBridge):
                 desired_other_transaction_hashes_and_fees=zip(tx_hashes, self.current_work.value['transaction_fees']),
                 net=self.node.net,
                 known_txs=tx_map,
-                base_subsidy=self.node.net.PARENT.SUBSIDY_FUNC(self.current_work.value['height']),
+                base_subsidy=self.current_work.value['subsidy'],
+                #base_subsidy=self.node.net.PARENT.SUBSIDY_FUNC(self.current_work.value['height']),
             )
         
         packed_gentx = bitcoin_data.tx_type.pack(gentx)
