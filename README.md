@@ -1,7 +1,7 @@
 Requirements:
 -------------------------
 Generic:
-* Myriadcoin >=0.9.2.10
+* Smileycoin >=3.0
 * Python >=2.6
 * Twisted >=10.0.0
 * python-argparse (for Python =2.6)
@@ -23,6 +23,7 @@ In order to run P2Pool with the various pow-algorithms, you would need to build 
 each module.
 
 Inside each module run the following command
+
 Linux:
 
     sudo python setup.py install
