@@ -16,7 +16,7 @@ RPC_CHECK = defer.inlineCallbacks(lambda bitcoind: defer.returnValue(
 ))
 SUBSIDY_FUNC=lambda height: 10000*100000000 >> (height + 1)//1226400
 POW_FUNC = lambda data: pack.IntType(256).unpack(__import__('groestl_hash').getPoWHash(data))
-BLOCK_PERIOD = 180
+BLOCK_PERIOD = 900 # sec, 1/5 blocks should be mined with this pow algorithm
 SYMBOL = 'SMLY'
 CONF_FILE_FUNC = lambda: os.path.join(os.path.join(os.environ['APPDATA'], 'smileycoin') if platform.system() == 'Windows' else os.path.expanduser('~/Library/Application Support/smileycoin/') if platform.system() == 'Darwin' else os.path.expanduser('~/.smileycoin'), 'smileycoin.conf')
 BLOCK_EXPLORER_URL_PREFIX='http://blockexplorer.smileycoin.eu/block/'
