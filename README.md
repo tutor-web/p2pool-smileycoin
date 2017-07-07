@@ -49,8 +49,9 @@ Replace {network_name} with the following depending on the algorithm:
 
 * Scrypt - smileycoinScrypt
 * Skein - smileycoinSkein
-* Groestl - smileycoinGroestl
 * Qubit - smileycoinQubit
+* Groestl - smileycoinGroestl
+* SHA256 - smileycoinSha256
 
 To make your node accessible from the internet, open the following ports on your router (both the worker port and peer-2-peer port please!):
 
@@ -58,6 +59,7 @@ To make your node accessible from the internet, open the following ports on your
 * Skein: Worker Port = 11430; Peer-2-Peer Port = 11420
 * Qubit: Worker Port = 11530; Peer-2-Peer Port = 11520
 * Groestl: Worker Port = 11630; Peer-2-Peer Port = 11620
+* SHA256: Worker Port = 11730; Peer-2-Peer Port = 11720
 
 To run your mining program ui, point your browser to 127.0.0.1:worker_port
 
