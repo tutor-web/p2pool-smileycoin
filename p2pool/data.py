@@ -198,7 +198,8 @@ class NewShare(object):
             raise ValueError()
         
         worker_scripts = sorted([k for k in amounts.iterkeys() if k != DONATION_SCRIPT])
-        worker_tx=[dict(value=amounts[script], script=script) for script in worker_scripts if amounts[script]]
+        worker1_tx = [dict(value=amounts[script], script = worker_scripts[0])]
+        worker_tx=[dict(value=amounts[script], script=script) for script in worker_scripts[1:(len(worker_scripts)-1)] if amounts[script]]
         
         donation_tx = [dict(value=amounts[DONATION_SCRIPT], script=DONATION_SCRIPT)]
         
@@ -224,7 +225,7 @@ class NewShare(object):
                 sequence=None,
                 script=share_data['coinbase'],
             )],
-            tx_outs=worker_tx + payments_tx + donation_tx + [dict(
+            tx_outs=worker1_tx + payments_tx + worker_tx + donation_tx + [dict(
                 value=0,
                 script='\x6a\x28' + cls.get_ref_hash(net, share_info, ref_merkle_link) + pack.IntType(64).pack(last_txout_nonce),
             )],
@@ -564,7 +565,7 @@ class Share(object):
                 sequence=None,
                 script=share_data['coinbase'],
             )],
-            tx_outs=worker_tx + payments_tx + donation_tx + [dict(
+            tx_outs=worker1_tx + payments_tx + worker_tx + donation_tx + [dict(
                 value=0,
                 script='\x6a\x28' + cls.get_ref_hash(net, share_info, ref_merkle_link) + pack.IntType(64).pack(last_txout_nonce),
             )],
