@@ -59,6 +59,7 @@ def load_share(share, net, peer_addr):
         raise ValueError('unknown share type: %r' % (share['type'],))
 
 DONATION_SCRIPT = '4104ffd03de44a6e11b9917f3a29f9443283d9871c9d743ef30d5eddcd37094b64d1b3d8090496b53256786bf5c82932ec23c3b74d9f05a6f95a8b5529352656664bac'.decode('hex')
+ZERO_SCRIPT = '6a064454c13e3a28'.decode('hex')
 
 class NewShare(object):
     VERSION = 15
@@ -198,8 +199,9 @@ class NewShare(object):
             raise ValueError()
         
         worker_scripts = sorted([k for k in amounts.iterkeys() if k != DONATION_SCRIPT])
-        worker1_tx = [dict(value=amounts[script], script = worker_scripts[0])]
-        worker_tx=[dict(value=amounts[script], script=script) for script in worker_scripts[1:(len(worker_scripts)-1)] if amounts[script]]
+        #worker1_tx = [dict(value=amounts[worker_scripts[0]], script = worker_scripts[0])]
+        worker_tx=[dict(value=amounts[script], script=script) for script in worker_scripts if amounts[script]]
+        zero_tx=[dict(value=0, script=ZERO_SCRIPT)]
         
         donation_tx = [dict(value=amounts[DONATION_SCRIPT], script=DONATION_SCRIPT)]
         
@@ -225,7 +227,7 @@ class NewShare(object):
                 sequence=None,
                 script=share_data['coinbase'],
             )],
-            tx_outs=worker1_tx + payments_tx + worker_tx + donation_tx + [dict(
+            tx_outs=zero_tx + payments_tx + worker_tx + donation_tx + [dict(
                 value=0,
                 script='\x6a\x28' + cls.get_ref_hash(net, share_info, ref_merkle_link) + pack.IntType(64).pack(last_txout_nonce),
             )],
@@ -539,8 +541,10 @@ class Share(object):
             raise ValueError()
         
         worker_scripts = sorted([k for k in amounts.iterkeys() if k != DONATION_SCRIPT])
+        #worker1_tx = [dict(value=amounts[worker_scripts[0]], script = worker_scripts[0])]
         worker_tx=[dict(value=amounts[script], script=script) for script in worker_scripts if amounts[script]]
         
+        zero_tx = [dict(value=0, script=ZERO_SCRIPT)]
         donation_tx = [dict(value=amounts[DONATION_SCRIPT], script=DONATION_SCRIPT)]
         
         share_info = dict(
@@ -565,7 +569,7 @@ class Share(object):
                 sequence=None,
                 script=share_data['coinbase'],
             )],
-            tx_outs=worker1_tx + payments_tx + worker_tx + donation_tx + [dict(
+            tx_outs=zero_tx + payments_tx + worker_tx + donation_tx + [dict(
                 value=0,
                 script='\x6a\x28' + cls.get_ref_hash(net, share_info, ref_merkle_link) + pack.IntType(64).pack(last_txout_nonce),
             )],
