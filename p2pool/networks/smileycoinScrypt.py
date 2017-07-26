@@ -1,7 +1,7 @@
 from p2pool.bitcoin import networks
 
 PARENT = networks.nets['smileycoinScrypt']
-SHARE_PERIOD = 36 # seconds target spacing, 1/5 of the block period
+SHARE_PERIOD = 180 # seconds target spacing, 1/5 of the block period
 CHAIN_LENGTH = 24*60*60//10
 REAL_CHAIN_LENGTH = 24*60*60//10
 TARGET_LOOKBEHIND = 200 
