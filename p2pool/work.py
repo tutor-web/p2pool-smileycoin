@@ -375,7 +375,7 @@ class WorkerBridge(worker_interface.WorkerBridge):
         self.last_work_shares.value[bitcoin_data.pubkey_hash_to_address(pubkey_hash, self.node.net.PARENT)]=share_info['bits']
         
         ba = dict(
-            version=min(self.current_work.value['version'], 4),
+            version=self.current_work.value['version'],
             previous_block=self.current_work.value['previous_block'],
             merkle_link=merkle_link,
             coinb1=packed_gentx[:-self.COINBASE_NONCE_LENGTH-4],
@@ -384,14 +384,14 @@ class WorkerBridge(worker_interface.WorkerBridge):
             bits=self.current_work.value['bits'],
             share_target=target,
         )
-        
+
         received_header_hashes = set()
         
         def got_response(header, user, coinbase_nonce):
             assert len(coinbase_nonce) == self.COINBASE_NONCE_LENGTH
             new_packed_gentx = packed_gentx[:-self.COINBASE_NONCE_LENGTH-4] + coinbase_nonce + packed_gentx[-4:] if coinbase_nonce != '\0'*self.COINBASE_NONCE_LENGTH else packed_gentx
             new_gentx = bitcoin_data.tx_type.unpack(new_packed_gentx) if coinbase_nonce != '\0'*self.COINBASE_NONCE_LENGTH else gentx
-            
+
             header_hash = bitcoin_data.hash256(bitcoin_data.block_header_type.pack(header))
             pow_hash = self.node.net.PARENT.POW_FUNC(bitcoin_data.block_header_type.pack(header))
             try:
